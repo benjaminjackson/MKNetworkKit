@@ -1332,8 +1332,15 @@ totalBytesExpectedToWrite:(NSInteger)totalBytesExpectedToWrite {
   
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
     
-    __block CGSize targetSize = CGSizeMake(size.width * scale, size.height * scale);
     UIImage *image = [self responseImage];
+    CGSize aspectSize;
+    if (size.width / size.height > image.size.width / image.size.height) {
+        aspectSize = CGSizeMake(floorf(image.size.width * size.height / image.size.height), size.height);
+    }
+    else {
+        aspectSize = CGSizeMake(size.width, floorf(image.size.height * size.width / image.size.width));
+    }
+    __block CGSize targetSize = CGSizeMake(aspectSize.width * scale, aspectSize.height * scale);
     CGImageRef imageRef = image.CGImage;
     CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
     CGImageAlphaInfo alphaInfo = CGImageGetAlphaInfo(imageRef);
