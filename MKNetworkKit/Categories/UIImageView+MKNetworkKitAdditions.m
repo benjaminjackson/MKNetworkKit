@@ -79,13 +79,17 @@ const float kFreshLoadAnimationDuration = 0.35f;
     self.imageFetchOperation = [imageCacheEngine imageAtURL:url
                                                        size:self.frame.size
                                           completionHandler:^(UIImage *fetchedImage, NSURL *url, BOOL isInCache) {
-                                            
-                                            [UIView transitionWithView:self.superview
-                                                              duration:isInCache?kFromCacheAnimationDuration:kFreshLoadAnimationDuration
-                                                               options:UIViewAnimationOptionTransitionCrossDissolve | UIViewAnimationOptionAllowUserInteraction
-                                                            animations:^{
-                                                                 self.image = fetchedImage;
-                                                               } completion:nil];
+                                              if (yesOrNo && !isInCache) {
+                                                [UIView transitionWithView:self.superview
+                                                                  duration:isInCache?kFromCacheAnimationDuration:kFreshLoadAnimationDuration
+                                                                   options:UIViewAnimationOptionTransitionCrossDissolve | UIViewAnimationOptionAllowUserInteraction
+                                                                animations:^{
+                                                                     self.image = fetchedImage;
+                                                                   } completion:nil];
+                                              }
+                                              else {
+                                                  self.image = fetchedImage;
+                                              }
                                             
                                           } errorHandler:^(MKNetworkOperation *completedOperation, NSError *error) {
                                             
