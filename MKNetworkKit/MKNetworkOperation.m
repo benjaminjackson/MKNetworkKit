@@ -25,6 +25,8 @@
 
 #import "MKNetworkKit.h"
 
+static NSString *AcceptLanguage;
+
 #ifdef __OBJC_GC__
 #error MKNetworkKit does not support Objective-C Garbage Collection
 #endif
@@ -586,9 +588,11 @@ OSStatus extractIdentityAndTrust(CFDataRef inPKCS12Data,
     
     [self.request setHTTPMethod:method];
     
-    [self.request setValue:[NSString stringWithFormat:@"%@, en-us",
-                            [[NSLocale preferredLanguages] componentsJoinedByString:@", "]
-                            ] forHTTPHeaderField:@"Accept-Language"];
+    if (!AcceptLanguage) {
+        AcceptLanguage = [NSString stringWithFormat:@"%@, en-us",
+                          [[NSLocale preferredLanguages] componentsJoinedByString:@", "]];
+    }
+    [self.request setValue:AcceptLanguage forHTTPHeaderField:@"Accept-Language"];
     
     if (([method isEqualToString:@"POST"] ||
          [method isEqualToString:@"PUT"]) && (params && [params count] > 0)) {
