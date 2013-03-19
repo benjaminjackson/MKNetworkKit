@@ -79,7 +79,7 @@ const float kFreshLoadAnimationDuration = 0.35f;
     self.imageFetchOperation = [imageCacheEngine imageAtURL:url
                                                        size:self.frame.size
                                           completionHandler:^(UIImage *fetchedImage, NSURL *url, BOOL isInCache) {
-                                              if (yesOrNo && !isInCache) {
+                                              if (yesOrNo) {
                                                 [UIView transitionWithView:self.superview
                                                                   duration:isInCache?kFromCacheAnimationDuration:kFreshLoadAnimationDuration
                                                                    options:UIViewAnimationOptionTransitionCrossDissolve | UIViewAnimationOptionAllowUserInteraction
