@@ -47,6 +47,7 @@ OSStatus extractIdentityAndTrust(CFDataRef inPKCS12Data,
                                  CFStringRef keyPassword);
 
 @interface MKNetworkOperation (/*Private Methods*/)
+@property (strong, nonatomic) NSString *uniqueIdentifierWithMD5;
 @property (strong, nonatomic) NSURLConnection *connection;
 @property (copy, nonatomic) NSString *uniqueId;
 @property (strong, nonatomic) NSMutableURLRequest *request;
@@ -274,6 +275,10 @@ OSStatus extractIdentityAndTrust(CFDataRef inPKCS12Data,
 }
 
 -(NSString*) uniqueIdentifier {
+    
+  if (_uniqueIdentifierWithMD5) {
+      return _uniqueIdentifierWithMD5;
+  }
   
   NSMutableString *str = [NSMutableString stringWithFormat:@"%@ %@", self.request.HTTPMethod, self.url];
   
@@ -288,7 +293,8 @@ OSStatus extractIdentityAndTrust(CFDataRef inPKCS12Data,
     
     [str appendString:self.uniqueId];
   }
-  return [str md5];
+    _uniqueIdentifierWithMD5 = [str md5];
+  return _uniqueIdentifierWithMD5;
 }
 
 -(BOOL) isCachedResponse {
