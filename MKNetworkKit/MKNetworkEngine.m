@@ -385,9 +385,11 @@ static NSOperationQueue *_sharedNetworkQueue;
 -(NSData*) cachedDataForOperation:(MKNetworkOperation*) operation {
   
   NSData *cachedData = (self.memoryCache)[[operation uniqueIdentifier]];
-  NSUInteger index = [self.memoryCacheKeys indexOfObject:[operation uniqueIdentifier]];
-  if (index != NSNotFound && cachedData) {
-    return cachedData;
+  @synchronized(self.memoryCacheKeys) {
+      NSUInteger index = [self.memoryCacheKeys indexOfObject:[operation uniqueIdentifier]];
+      if (index != NSNotFound && cachedData) {
+          return cachedData;
+      }
   }
   
   NSString *filePath = [[self cacheDirectoryName] stringByAppendingPathComponent:[operation uniqueIdentifier]];
@@ -608,7 +610,9 @@ static NSOperationQueue *_sharedNetworkQueue;
   }
   
   [self.memoryCache removeAllObjects];
-  [self.memoryCacheKeys removeAllObjects];
+  @synchronized(self.memoryCacheKeys) {
+      [self.memoryCacheKeys removeAllObjects];
+  }
   
   NSString *cacheInvalidationPlistFilePath = [[self cacheDirectoryName] stringByAppendingPathExtension:@"plist"];
   [self.cacheInvalidationParams writeToFile:cacheInvalidationPlistFilePath atomically:YES];
@@ -620,28 +624,30 @@ static NSOperationQueue *_sharedNetworkQueue;
     
     (self.memoryCache)[cacheDataKey] = data;
     
-    NSUInteger index = [self.memoryCacheKeys indexOfObject:cacheDataKey];
-    if(index != NSNotFound)
-      [self.memoryCacheKeys removeObjectAtIndex:index];
-    
-    [self.memoryCacheKeys insertObject:cacheDataKey atIndex:0]; // remove it and insert it at start
-    
-    if([self.memoryCacheKeys count] >= (NSUInteger)[self cacheMemoryCost])
-    {
-      NSString *lastKey = [self.memoryCacheKeys lastObject];
-      NSData *data2 = (self.memoryCache)[lastKey];
-      NSString *filePath = [[self cacheDirectoryName] stringByAppendingPathComponent:lastKey];
-      
-      if([[NSFileManager defaultManager] fileExistsAtPath:filePath]) {
-        
-        NSError *error = nil;
-        [[NSFileManager defaultManager] removeItemAtPath:filePath error:&error];
-        ELog(error);
+    @synchronized(self.memoryCacheKeys) {
+      NSUInteger index = [self.memoryCacheKeys indexOfObject:cacheDataKey];
+      if(index != NSNotFound) {
+        [self.memoryCacheKeys removeObjectAtIndex:index];
       }
-      [data2 writeToFile:filePath atomically:YES];
-      
-      [self.memoryCacheKeys removeLastObject];
-      [self.memoryCache removeObjectForKey:lastKey];
+      [self.memoryCacheKeys insertObject:cacheDataKey atIndex:0]; // remove it and insert it at start
+    
+      if([self.memoryCacheKeys count] >= (NSUInteger)[self cacheMemoryCost])
+      {
+        NSString *lastKey = [self.memoryCacheKeys lastObject];
+        NSData *data2 = (self.memoryCache)[lastKey];
+        NSString *filePath = [[self cacheDirectoryName] stringByAppendingPathComponent:lastKey];
+        
+        if([[NSFileManager defaultManager] fileExistsAtPath:filePath]) {
+        
+          NSError *error = nil;
+          [[NSFileManager defaultManager] removeItemAtPath:filePath error:&error];
+          ELog(error);
+        }
+        [data2 writeToFile:filePath atomically:YES];
+        
+        [self.memoryCacheKeys removeLastObject];
+        [self.memoryCache removeObjectForKey:lastKey];
+      }
     }
   });
 }
