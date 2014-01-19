@@ -385,7 +385,10 @@ static NSOperationQueue *_sharedNetworkQueue;
 -(NSData*) cachedDataForOperation:(MKNetworkOperation*) operation {
   
   NSData *cachedData = (self.memoryCache)[[operation uniqueIdentifier]];
-  if(cachedData) return cachedData;
+  NSUInteger index = [self.memoryCacheKeys indexOfObject:[operation uniqueIdentifier]];
+  if (index != NSNotFound && cachedData) {
+    return cachedData;
+  }
   
   NSString *filePath = [[self cacheDirectoryName] stringByAppendingPathComponent:[operation uniqueIdentifier]];
   
